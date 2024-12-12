@@ -1,0 +1,188 @@
+{% extends "officer/layout.html" %}
+
+{% block content %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #ffffff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .form-container {
+            flex: 1;
+        }
+
+        .message-container {
+            flex: 1;
+            max-width: 300px;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        input,
+        textarea {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .btn {
+            color: white;
+        }
+
+        button.btn {
+            padding: 10px 15px;
+            background-color: #159EFD;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #159EFD;
+        }
+
+        .floating_area>a:first-child {
+            margin-bottom: 5px;
+        }
+
+        .floating_area>a {
+            display: block;
+            padding: 0 10px;
+        }
+
+        .floating_area {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            z-index: 1000;
+        }
+
+        img {
+            margin-top: 3px;
+            margin-right: 6px;
+        }
+
+        a:hover {
+            text-decoration: none;
+        }
+
+        button.swal2-confirm.swal2-styled {
+            border-width: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="form-container">
+            <header>
+                <h1>เหตุผลที่ไม่สามารถซ่อมได้</h1>
+            </header>
+            <main>
+                <form id="reasonForm">
+                    <input type="hidden" id="{{ reports.id }}" name="{{ reports.id }}" value="{{ reports.id }}">
+                    <label for="recipient">ข้อความก่อนหน้า:</label>
+                    <p>
+                        {% if reports.reason %}
+                            {{ reports.reason }}
+                        {% else %}
+                            ไม่มีข้อความ
+                        {% endif %}
+                    </p>
+                    <label for="message">ข้อความ:</label>
+                    <textarea id="message" name="message" rows="10" required></textarea>
+                    <button type="submit" class="btn">ส่งเหตุผล </button>
+                </form>
+            </main>            
+        </div>
+    </div>
+    <script>
+        document.getElementById('reasonForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            
+            // แจ้งเตือนยืนยัน
+            const isConfirmed = confirm('คุณต้องการส่งข้อมูลหรือไม่?');
+            
+            if (!isConfirmed) {
+                // ถ้าผู้ใช้กด "ยกเลิก" ให้หยุดการทำงาน
+                return;
+            }
+        
+            const repairId = document.getElementById('{{ reports.id }}').value;
+            const message = document.getElementById('message').value;
+        
+            const data = {
+                id: repairId,
+                message: message,
+            }
+        
+            fetch('/api/reason', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (response.ok) {
+                    // รีเฟรชหน้าเมื่อส่งข้อมูลสำเร็จ
+                    window.location.reload();
+                } else {
+                    window.location.reload();
+                    console.error('Error:', response.statusText);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+
+</html>
+
+{% endblock %}

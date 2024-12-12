@@ -1,0 +1,250 @@
+{% extends "officer/layout.html" %}
+
+{% block title %}หน้าช่าง{% endblock %}
+
+{% block content %}
+
+<style>
+    table {
+        border: 2px solid #ffb52ce0; /* ขอบดำรอบตาราง */
+        width: 80%; /* ลดความกว้างเพื่อให้ดูสมดุล */
+        border-collapse: collapse;
+        margin: 20px auto; /* จัดให้ตารางอยู่ตรงกลาง */
+    }
+
+    th,
+    td {
+        padding: 12px;
+        text-align: center;
+        border-bottom: 1px solid #ddd;
+        border: 1px solid rgb(255, 237, 237); 
+    }
+
+    th {
+        background: linear-gradient(45deg, #eb1408, #f3ff11);
+        color: aliceblue;
+    }
+
+    tr:hover {
+        background-color: #f5f5f5;
+    }
+
+    h2 {
+        text-align: center;
+        margin-top: 20px;
+        color: #31368f;
+    }
+
+    .action-column {
+        display: flex;
+        padding: 20px;
+        gap: 10px;
+    }
+
+    a.action-link {
+        font-size: 17px;
+        color: blue;
+        text-decoration: none;
+    }
+    button.green-btn{
+        font-family: "Sarabun", sans-serif;
+        background-color: #3ADEA8;
+        border-width: 0;
+        border-radius: 10px;
+    }
+
+    button.yellow-btn{
+        font-family: "Sarabun", sans-serif;
+        background-color: #F3FA11;
+        border-width: 0;
+        border-radius: 10px;
+    }
+
+    button.orange-btn{
+        color: white;
+        font-family: "Sarabun", sans-serif;
+        background-color: #EE660B;
+        border-width: 0;
+        border-radius: 10px;
+    }
+
+    button.delete-btn{
+        color: white;
+        font-family: "Sarabun", sans-serif;
+        background-color: #FF0000;
+        border-width: 0;
+        border-radius: 10px;
+    }
+</style>
+<h2>สถานะการดำเนินการ</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>วันเดือนปีและเวลา</th>
+            <th>ชื่ออุปกรณ์</th>
+            <th>สถานที่</th>
+            <th>สถานะ</th>
+            <th>การจัดการ</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in reports %}
+        <tr>
+            <td>{{r.created_at|date('d/m/Y H:i:s')}}</td>
+            <td>{{r.equipment}}</td>
+            <td>{{r.location}}</td>
+            <td>
+                {% if r.status == "pending" %}
+                ตรวจเช็ค
+                {% elseif r.status == "progress" %}
+                กำลังซ่อม
+                {% elseif r.status == "cannot" %}
+                <a href="/tc/cannot_repair/{{r.id}}" class="btn btn-danger">ซ่อมไม่ได้!</a>
+                {% else %}
+                ซ่อมเรียบร้อย
+                {% endif %}
+            </td>
+            <td class="action-column">
+                <a href="/tc/report_detail/{{ r.id }}" class="action-link">ดูรายละเอียด</a>
+            
+                <form onsubmit="event.preventDefault(); confirmSuccess('{{ r.id }}')">
+                    <button class="green-btn">ดำเนินการเสร็จสิ้น</button>
+                </form>
+                <form onsubmit="event.preventDefault(); confirmProgress('{{ r.id }}')">
+                    <button class="yellow-btn">กำลังดำเนินการ</button>
+                </form>
+                <form onsubmit="event.preventDefault(); confirmCannot('{{ r.id }}')">
+                    <button class="orange-btn">ซ่อมไม่ได้</button>
+                </form>
+                <form onsubmit="event.preventDefault(); confirmDelete('{{ r.id }}')">
+                    <button class="delete-btn">ลบ</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function confirmSuccess(id) {
+        alertify.confirm('ดำเนินการเสร็จสิ้น', 'กดยืนยันเมื่อดำเนินการเสร็จ',
+            async function () {
+                try {
+                    let response = await fetch('/api/success', {
+                        method: 'PUT',
+                        body: JSON.stringify({
+                            id
+                        })
+                    });
+                    if (response.ok) {
+                        alertify.success('ดำเนินการเสร็จสิ้น');
+                        setTimeout(function() {
+                            location.reload(); 
+                        }, 600); 
+                    } else {
+                        alertify.error('ดำเนินการล้มเหลว');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alertify.error('เกิดข้อผิดพลาดขณะเปลี่ยนสถานะ');
+                }
+            },
+            function () {
+                alertify.error('ยกเลิกการดำเนินการ');
+            }
+        ).set('labels', {ok: 'ยืนยัน', cancel: 'ยกเลิก'});
+    }
+
+    async function confirmProgress(id) {
+        alertify.confirm('กำลังดำเนินการ', 'กดยืนยันเมื่อกำลังดำเนินการ',
+            async function () {
+                try {
+                    let response = await fetch('/api/progress', {
+                        method: 'PUT',
+                        body: JSON.stringify({
+                            id
+                        })
+                    });
+                    if (response.ok) {
+                        alertify.success('กำลังดำเนินการ');
+                        setTimeout(function() {
+                            location.reload(); 
+                        }, 600); 
+                    } else {
+                        alertify.error('กำลังดำเนินการล้มเหลว');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alertify.error('เกิดข้อผิดพลาดขณะเปลี่ยนสถานะ');
+                }
+            },
+            function () {
+                alertify.error('ยกเลิกกำลังดำเนินการ');
+            }
+        ).set('labels', {ok: 'ยืนยัน', cancel: 'ยกเลิก'});
+    }
+
+    async function confirmCannot(id) {
+        alertify.confirm('ซ่อมไม่ได้', 'กดยืนยันเมื่อซ่อมไม่ได้',
+            async function () {
+                try {
+                    let response = await fetch('/api/cannot', {
+                        method: 'PUT',
+                        body: JSON.stringify({
+                            id
+                        })
+                    });
+                    if (response.ok) {
+                        alertify.success('เปลี่ยนสถานะเรียบร้อย');
+                        setTimeout(function() {
+                            location.reload(); 
+                        }, 600); 
+                    } else {
+                        alertify.error('ดำเนินการล้มเหลว');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alertify.error('เกิดข้อผิดพลาดขณะเปลี่ยนสถานะ');
+                }
+            },
+            function () {
+                alertify.error('ยกเลิกซ่อมไม่ได้');
+            }
+        ).set('labels', {ok: 'ยืนยัน', cancel: 'ยกเลิก'});
+    }
+
+    async function confirmDelete(id) {
+        alertify.confirm('แน่ใจที่จะลบ?', 'กดยืนยันเพื่อลบ',
+            async function () {
+                try {
+                    let response = await fetch('/api/delete', {
+                        method: 'DELETE',
+                        body: JSON.stringify({
+                            id
+                        })
+                    });
+                    if (response.ok) {
+                        alertify.success('ลบเรียบร้อย');
+                        setTimeout(function() {
+                            location.reload(); 
+                        }, 1500); 
+                    } else {
+                        alertify.error('การลบล้มเหลว');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alertify.error('เกิดข้อผิดพลาดขณะเปลี่ยนสถานะ');
+                }
+            },
+            function () {
+                alertify.error('ยกเลิกการลบ');
+            }
+        ).set('labels', {ok: 'ยืนยัน', cancel: 'ยกเลิก'});
+    }
+
+
+</script>
+{% endblock %}

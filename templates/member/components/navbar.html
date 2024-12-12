@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/alertify.min.css" />
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/themes/default.min.css" />
+  <style>
+    body {
+      font-family: "Sarabun", sans-serif;
+    }
+
+    .navbar-custom {
+      background: linear-gradient(45deg, #560466, #6b46b5, #60b2ec);
+    }
+
+    .navbar-custom .nav-link {
+      color: white;
+    }
+
+    .navbar-custom .nav-link:hover {
+      color: #d1c4e9;
+    }
+
+    .navbar-toggler {
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .navbar-toggler-icon {
+      background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba%28255, 255, 255, 0.5%29' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+    }
+
+    .status-indicator {
+      background-color: red;
+      color: white;
+      border-radius: 60%;
+      padding: 1px 5px;
+      font-size: 9px;
+      margin-left: 3px; /* ลดระยะห่างระหว่างข้อความ */
+      display: inline-flex;
+      vertical-align: top;
+      position: relative; /* เปลี่ยนเป็น relative เพื่ออยู่ใกล้กับข้อความ */
+      top: -5px; /* ปรับตำแหน่งให้สูงขึ้น */
+  }
+  </style>
+</head>
+
+<body>
+  
+  <nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+    <a class="navbar-brand" href=""></a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+    aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav mr-auto">
+        {% if not isLoggin %}
+        <li class="nav-item">
+          <a class="nav-link" href="/login" id="loginLink">เข้าสู่ระบบ</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/register" id="registerLink">สมัครสมาชิก</a>
+        </li>
+        {% endif %}
+        
+        {% if isLoggin %}
+        <li class="nav-item">
+          <a class="nav-link" href="#" style="text-transform: uppercase;">ID:{{id}}</a>
+      </li>
+        <li class="nav-item" id="free">
+          <a class="nav-link" href="#" style="text-transform: uppercase;">{{email}}</a>
+      </li>
+        <li class="nav-item active">
+          <a class="nav-link" href="/">แจ้งซ่อม <span class="sr-only">(current)</span></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/status" id="status-link">ติดตามสถานะ 
+              <!-- <span id="status-indicator" class="status-indicator" aria-live="polite">{{number}}</span> -->
+          </a>
+      </li>
+            <li class="nav-item" id="changepw">
+                <a class="nav-link" href="/changepassword">เปลี่ยนรหัสผ่าน</a>
+            </li>
+            <li class="nav-item" id="logoutNavItem">
+              <a class="nav-link" href="#">ออกจากระบบ</a>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+</nav>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/alertify.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap"
+    rel="stylesheet">
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const logoutNavItem = document.getElementById("logoutNavItem");
+  
+      if (logoutNavItem) {
+          logoutNavItem.addEventListener("click", () => {
+              alertify.confirm('แจ้งเตือนออกจากระบบ',"คุณต้องการออกจากระบบหรือไม่?", async function () {
+                  try {
+                      const response = await fetch("/api/logout", {
+                          method: "GET",
+                      });
+                      if (response.ok) {
+                          alertify.success('คุณได้ออกจากระบบเรียบร้อยแล้ว', 1, () => {
+                              setTimeout(() => {
+                                  location.reload(); 
+                              }, 600); 
+                          });
+                      } else {
+                          alertify.error('เกิดข้อผิดพลาดขณะออกจากระบบ');
+                      }
+                  } catch (error) {
+                      alertify.error('เกิดข้อผิดพลาด: ' + error.message);
+                  }
+              }, function () {
+                  alertify.error('ยกเลิกการออกจากระบบ');
+              }).set('labels', {ok: 'ใช่', cancel: 'ไม่'}); 
+          });
+      }
+  });
+  
+
+    $(document).ready(function () {
+        $(window).scroll(function () {
+          if ($(this).scrollTop() > 50) {
+            $('.navbar-custom').addClass('scrolled');
+          } else {
+            $('.navbar-custom').removeClass('scrolled');
+          }
+        });
+      });
+
+      document.addEventListener('DOMContentLoaded', function() {
+        const statusIndicator = document.getElementById('status-indicator');
+
+        function checkStatusPage() {
+            const currentUrl = window.location.pathname;
+            if (currentUrl === '/status') {
+      
+                statusIndicator.style.display = 'none';
+            } else {
+      
+                statusIndicator.style.display = 'inline';
+            }
+        }
+        checkStatusPage();
+
+        window.addEventListener('popstate', function() {
+            checkStatusPage();
+        });
+    });
+
+  </script>
+
+</body>
+
+</html>

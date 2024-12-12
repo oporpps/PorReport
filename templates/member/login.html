@@ -1,0 +1,197 @@
+{% extends "member/layout.html" %}
+
+{% block styles %}
+<style>
+    html,
+    body {
+        height: 100%;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .wrapper {
+        max-width: 400px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .form-signin {
+        background-color: #fff;
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0px 4px 15px rgba(0,0,0,0.2);
+        transition: all 0.3s ease-in-out;
+    }
+
+    .form-signin:hover {
+        box-shadow: 0px 0px 25px 0px rgba(0, 0, 0, 0.3);
+    }
+
+    .form-signin h2 {
+        text-align: center;
+        margin-bottom: 20px;
+        font-family: "Sarabun", sans-serif;
+        font-style: normal;
+        font-size: 24px;
+        color: #000000;
+    }
+
+    .form-control {
+        font-family: "Sarabun", sans-serif;
+        margin-bottom: 15px;
+        width: 100%;
+        padding: 10px;
+        box-sizing: border-box;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        transition: border-color 0.3s ease-in-out;
+    }
+
+    .form-control:focus {
+        border-color: #007bff;
+    }
+
+    .btn {
+        margin-top: 10px;
+        margin-left: 1px;
+        width: 100%;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s ease-in-out;
+    }
+
+    button.btn-primary {
+        background-color: #159EFD;
+        color: #fff;
+    }
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+    }
+
+    .btn-secondary {
+        font-family: "Sarabun", sans-serif;
+        background-color: #343a40;
+        color: #fff;
+    }
+
+    .btn-secondary:hover {
+        background-color: #23272b;
+    }
+
+    a[class*="btn"] {
+        text-decoration: none;
+    }
+
+    input[class*="btn"],
+
+    button.btn-3d.purple {
+        border-width: 0;
+    }
+
+    .btn-3d {
+        position: relative;
+        display: inline-block;
+        font-size: 20px;
+        padding: 10px 30px;
+        color: white;
+        margin: 10px 1px 10px;
+        border-radius: 6px;
+        text-align: center;
+        transition: top .01s linear;
+        text-shadow: 0 1px 0 rgba(0, 0, 0, 0.15);
+        width: 100%;
+    }
+
+    .btn-3d.purple:hover {
+        background-color: #D19ECB;
+    }
+
+    .btn-3d:active {
+        top: 9px;
+    }
+
+    .btn-3d.purple {
+        background: linear-gradient(135deg, #9f70ff, #72d5ff);
+        box-shadow: 0 0 0 1px #9f70ff inset,
+            0 0 0 2px rgba(255, 255, 255, 0.15) inset,
+            0 8px 0 0 rgba(120, 85, 165, 0.7),
+            0 8px 0 1px rgba(0, 0, 0, 0.4),
+            0 8px 8px 1px rgba(0, 0, 0, 0.5);
+    }
+
+    .btn-3d.purple:active {
+        background: linear-gradient(135deg, #9f70ff, #72d5ff);
+        box-shadow: 0 0 0 1px #9f70ff inset,
+            0 0 0 2px rgba(255, 255, 255, 0.15) inset,
+            0 0 0 1px rgba(0, 0, 0, 0.4);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+    href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap"
+    rel="stylesheet">
+<div class="wrapper">
+    <form id="login" class="form-signin">
+        <h2 class="form-signin-heading">เข้าสู่ระบบ</h2>
+        <input type="text" class="form-control" id="username" placeholder="ชื่อผู้ใช้" required />
+        <div class="password-wrapper">
+            <input type="password" class="form-control" id="password" placeholder="รหัสผ่าน" required />
+        </div>
+        <button class="btn-3d purple" type="submit">เข้าสู่ระบบ</button>
+        <button class="btn btn-lg btn-secondary" type="reset">ยกเลิก</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById("login").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        let username = document.getElementById("username").value;
+        let password = document.getElementById("password").value;
+
+        try {
+            const response = await fetch("/api/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message);
+            }
+
+            location.reload();
+
+        } catch (error) {
+            alert(error.message);
+        }
+    });
+
+    $('a').click(function (event) {
+        event.preventDefault(); 
+        const targetUrl = $(this).attr('href'); 
+        console.log('Link clicked:', targetUrl);
+
+        
+        setTimeout(() => {
+            window.location.href = targetUrl; 
+        }, 1000); 
+    });
+</script>
+{% endblock %}

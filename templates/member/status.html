@@ -1,0 +1,180 @@
+{% extends "member/layout.html" %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>หน้าแจ้งสถานะ</title>
+    <style>
+        body {
+            background-image: url(https://i.pinimg.com/564x/a1/ee/f4/a1eef4abe0b31a8f31e260bea050923f.jpg);
+            background-color: white;
+        }
+
+        h2 {
+            text-align: center;
+            margin-top: 20px;
+            color: #31368f;
+        }
+
+        .search-container {
+            text-align: center;
+            margin: 20px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            width: 50%;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button[type="submit"] {
+            padding: 10px 20px;
+            background-color: #2c244f;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #4a3a7f;
+        }
+
+        table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #2c244f;
+            color: white;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        img {
+            max-width: 100px;
+            height: auto;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>สถานะแจ้งซ่อม</h2>
+
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="ค้นหา...">
+    </div>
+
+    <table id="reportsTable">
+        <thead>
+            <tr>
+                <th>วันเดือนปีและเวลา</th>
+                <th>ID ที่แจ้ง</th>
+                <th>ยี่ห้อ</th>
+                <th>รุ่น</th>
+                <th>ชื่ออุปกรณ์</th>
+                <th>ปัญหาที่พบเจอ</th>
+                <th>ซีเรียล</th>
+                <th>สถานที่</th>
+                <th>สถานะ</th>
+                <th>รูปภาพ</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in reports %}
+            <tr>
+                <td>{{ r.updated_at|date('d/m/Y H:i:s') }}</td>
+                <td>ID:{{r.user_id}}</td>
+                <td>{{r.brand}}</td>
+                <td>{{r.model}}</td>
+                <td>{{r.equipment}}</td>
+                <td>{{r.issue}}</td>
+                <td>{{r.serial_number}}</td>
+                <td>{{r.location}}</td>
+                <td>
+                    {% if r.status == "pending" %}
+                    ตรวจเช็ค
+                    {% elseif r.status == "progress" %}
+                    กำลังซ่อม
+                    {% elseif r.status == "cannot" %}
+                    <a href="/status/cannot_repair/{{r.id}}" class="btn btn-danger">ซ่อมไม่ได้!</a>
+                    {% else %}
+                    ซ่อมเรียบร้อย
+                    {% endif %}
+                </td>
+                <td><img src="/assets/images/{{r.images}}"></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            const input = this.value.toLowerCase();
+            const table = document.getElementById('reportsTable');
+            const rows = table.getElementsByTagName('tr');
+
+            for (let i = 1; i < rows.length; i++) { // เริ่มจาก 1 เพื่อข้าม header
+                const cells = rows[i].getElementsByTagName('td');
+                let match = false;
+
+                // ตรวจสอบในแต่ละ cell
+                for (let j = 0; j < cells.length; j++) {
+                    if (cells[j].innerText.toLowerCase().includes(input)) {
+                        match = true;
+                        break;
+                    }
+                }
+
+                // แสดงหรือซ่อนแถวตามผลการค้นหา
+                rows[i].style.display = match ? '' : 'none';
+            }
+        });
+    </script>
+
+</body>
+
+</html>
+
+{% endblock %}
+
+{% block scripts %}
+<!-- <script src="{{ asset('assets', 'js/file.css') }}"></script> -->
+<!-- <script src="https://cdn.com/file.css"></script> -->
+<script>
+    /* write javascript code */
+
+    getStartBtn.addEventListener("click", (event) => {
+        alert("Coming Soon")
+    })
+
+    docsBtn.addEventListener("click", (event) => {
+        alert("Coming Soon")
+    })
+
+</script>
+{% endblock %}

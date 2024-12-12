@@ -1,0 +1,61 @@
+$data = $products -> Select(
+    "
+        t_id AS id,
+        t_name AS name,
+        CASE 
+            WHEN EXISTS (SELECT 1 FROM " . $stock->__table__ . " WHERE t_product_id = " . $products->__table__ . ".t_id) THEN 'IN_STOCK' 
+            ELSE 'OUT_STOCK' 
+        END AS stock,
+        t_price AS price,
+        t_discount AS discount,
+        t_image_props AS image,
+        t_sold AS sold,
+        t_like AS likes,
+        t_descriptions AS descriptions,
+        t_category_id AS category,
+        t_updatedAt AS updatedAt,
+        t_createdAt AS createdAt
+    "
+) -> where("t_publish = ? AND t_name LIKE ? ORDER BY t_id DESC LIMIT ? OFFSET ?", ["PUBLISH", "%" . $search . "%", $limit, $offset]) -> executeWith() -> findAll();
+
+
+
+
+private static function giftcode($data){
+
+    if (!isset($data["code"]) || empty($data["code"])) return abortWithJson(400, ["status" => "error", "message" => "ไม่พบ field code"]);
+
+    $gift = new GiftCode();
+
+    $gift_tb = $gift -> Select() -> where("t_code = ?", [$data["code"]]) -> executeWith() -> findOne();
+    if (!$gift_tb) return abortWithJson(400, ["status" => "error", "message" => "ไม่มีรหัสของขวัญนี้ในระบบ"]);
+
+    if ($gift_tb["t_quota"] <= 0) return abortWithJson(400, ["status" => "error", "message" => "ของขวัญนี้หมดแล้ว"]);
+
+    $tx = new Transaction();
+
+    // if user has redeem exists
+    $tx_exists = $tx -> Select() -> where("t_ref_id = ? AND t_type = ? AND t_account_id = ?", [$gift_tb["t_id"], "redeem",$_SESSION["session_id"]]) -> executeWith() -> findOne();
+    if ($tx_exists) {
+        return abortWithJson(400, ["status" => "error", "message" => "คุณได้รับของขวัญนี้ไปแล้ว"]);
+    }
+
+    // save to db
+    if (!$tx -> Create(["t_account_id", "t_type", "t_cash", "t_ref_id"], [$_SESSION["session_id"], "redeem", $gift_tb["t_cash"], $gift_tb["t_id"]]) -> execute()) return abortWithJson(400, ["status" => "error", "message" => "ไม่สามารถบันทึกธุรกรรมนี้ได้"]);
+
+    // update giftcode quota
+    $gift -> Update(["t_quota"], [$gift_tb["t_quota"] - 1]) -> where("t_id = ?", [$gift_tb["t_id"]]) -> execute();
+
+    $user = new Account();
+    $result = $user -> Select() -> where("t_id = ?", [$_SESSION["session_id"]]) -> executeWith() -> findOne();
+    if (!$result) return abortWithJson(400, ["status" => "error", "message" => "ไม่พบผู้ใข้นี้ในระบบ"]);
+
+    // update balance
+    $new_balance = $result["t_cash"] +  $gift_tb["t_cash"];
+
+    if (!$user -> Update(["t_cash"], [$new_balance]) -> where("t_id = ?", [$_SESSION["session_id"]]) -> execute()) return abortWithJson(400, ["status" => "error", "message" => "ไม่สามารถอัพเดทเครดิตนี้ได้กรุณาติดต่อแอดมิน"]);
+    
+    return jsonify(["status" => "success", "message" => "คุณได้รับของขวัญเป็นเครติดจำนวน " . $gift_tb["t_cash"]], 200);
+    
+
+}

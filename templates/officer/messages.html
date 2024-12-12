@@ -1,0 +1,133 @@
+{% extends "officer/layout.html" %}
+
+{% block content %}
+
+<head>
+    <style>
+        body {
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #ffffff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .message-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .message-item {
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .message-item:last-child {
+            border-bottom: none;
+        }
+
+        .message-content {
+            flex: 1;
+        }
+
+        .message-actions {
+            margin-left: 10px;
+        }
+
+        .message-actions button {
+            padding: 5px 10px;
+            margin-left: 5px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .message-actions button:hover {
+            background-color: #0056b3;
+        }
+
+        .message-actions button.delete {
+            background-color: #dc3545;
+        }
+
+        .message-actions button.delete:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>ข้อความที่ได้รับ</h1>
+        </header>
+        <main>
+            <ul class="message-list">
+                {% for s in sends %}
+                    <li class="message-item">
+                        <div class="message-content">
+                            <strong>จาก Admin </strong><br>
+                            <strong>หัวข้อ: </strong>{{ s.subject }}<br>
+                            <p>{{ s.message }}</p>
+                        </div>
+                        <div class="message-actions">
+                            <form method="post">
+                                <button class="delete" onclick="confirmDelete('{{ s.id }}')">ลบข้อความ</button>
+                            </form>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </main>
+    </div>
+</body>
+</html>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function confirmDelete(id) {
+        if (confirm("กดตกลงเพื่อลบ")) {
+            try {
+                let response = await fetch('/api/deleteM', {
+                    method: 'DELETE',
+                    body: JSON.stringify({
+                        id
+                    })
+                });
+                if (response.ok) {
+                    alert('ลบเรียบร้อย');
+                    location.reload();
+                } else {
+                    alert('Failed to delete');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while deleting');
+            }
+        }
+    }
+</script>
+{% endblock %}

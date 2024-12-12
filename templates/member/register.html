@@ -1,0 +1,205 @@
+{% extends "member/layout.html" %}
+
+{% block styles %}
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .wrapper {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .form-signin {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0px 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease-in-out;
+        }
+
+        .form-signin:hover {
+            box-shadow: 0px 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .form-signin h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 28px;
+            color: #333;
+        }
+
+        .form-control {
+            margin-bottom: 15px;
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        .form-control:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0,123,255,0.5);
+            outline: none;
+        }
+
+        .btn {
+            margin-top: 10px;
+            width: 100%;
+            padding: 10px;
+            font-size: 18px;
+            border-radius: 5px;
+        }
+        button.btn-primary{
+            background-color: #159EFD;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+
+        body {
+            background-color: #f2f2f2;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<script src="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/alertify.min.js"></script>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<div class="wrapper">
+    <form id="register" class="form-signin">       
+        <h2 class="form-signin-heading">สมัครสมาชิก</h2>
+        <input type="text" class="form-control" id="username" placeholder="ชื่อผู้ใช้" required/>
+        <input type="password" class="form-control" id="password" placeholder="รหัสผ่าน" required/>
+        <input type="password" class="form-control" id="confirm_password" placeholder="ยืนยันรหัสผ่าน" required/>
+
+        <div class="g-recaptcha" data-sitekey="6LdGwFwqAAAAAMQHVl3C__euTFGkDkHZShj_M80Q"></div>
+        <button class="btn btn-lg btn-primary" type="submit">ยืนยัน</button>
+        <button class="btn btn-lg btn-secondary" type="reset">ยกเลิก</button>   
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const passwordInput = document.getElementById("password");
+    const confirmPasswordInput = document.getElementById("confirm_password");
+    const passwordStrengthText = document.createElement("small");
+    
+    passwordInput.parentNode.insertBefore(passwordStrengthText, confirmPasswordInput);
+
+    // ฟังก์ชันตรวจสอบความแน่นหนาของรหัสผ่าน
+    const isPasswordStrong = (password) => {
+        const hasLowerCase = /[a-z]/.test(password);
+        const hasUpperCase = /[A-Z]/.test(password);
+        const hasNumbers = /\d/.test(password);
+        const isLongEnough = password.length >= 6;
+
+        return {
+            isStrong: hasLowerCase && hasUpperCase && hasNumbers && isLongEnough,
+            hasLowerCase,
+            hasUpperCase,
+            hasNumbers,
+            isLongEnough
+        };
+    };
+
+    const updatePasswordStrengthText = (password) => {
+        const strength = isPasswordStrong(password);
+        let messages = [];
+
+        if (!strength.isLongEnough) {
+            messages.push("ความยาวอย่างน้อย 6 ตัวอักษร");
+        }
+        if (!strength.hasNumbers) {
+            messages.push("มีตัวเลข");
+        }
+        if (!strength.hasLowerCase) {
+            messages.push("มีตัวอักษรพิมพ์เล็ก");
+        }
+        if (!strength.hasUpperCase) {
+            messages.push("มีตัวอักษรพิมพ์ใหญ่");
+        }
+
+        passwordStrengthText.style.color = strength.isStrong ? "green" : "red";
+        passwordStrengthText.textContent = strength.isStrong ? "รหัสผ่านปลอดภัย" : `ความปลอดภัยรหัสผ่าน: ${messages.join(", ")}`;
+    };
+
+    // เรียกใช้ฟังก์ชันตรวจสอบรหัสผ่านเมื่อผู้ใช้พิมพ์ในฟิลด์รหัสผ่าน
+    passwordInput.addEventListener("input", () => {
+        updatePasswordStrengthText(passwordInput.value);
+    });
+
+    document.getElementById("register").addEventListener("submit", async (e) => {
+        e.preventDefault(); 
+    
+        // ดึงค่าจากฟอร์ม
+        let username = document.getElementById("username").value;
+        let password = document.getElementById("password").value;
+        let confirm_password = document.getElementById("confirm_password").value;
+    
+        // ดึง reCAPTCHA response
+        let recaptchaResponse = grecaptcha.getResponse();
+    
+        // ตรวจสอบว่า reCAPTCHA ถูกใช้งานหรือไม่
+        if (!recaptchaResponse) {
+            return alert("กรุณายืนยันว่าคุณไม่ได้เป็นหุ่นยนต์");
+        }
+    
+        // ตรวจสอบว่ารหัสผ่านตรงกัน
+        if (password !== confirm_password) {
+            return alert("รหัสผ่านไม่ตรงกัน");
+        }
+    
+        // ตรวจสอบความแน่นหนาของรหัสผ่าน
+        const strength = isPasswordStrong(password);
+        if (!strength.isStrong) {
+            return alert("รหัสผ่านควรมีความยาวอย่างน้อย 6 ตัวอักษร และประกอบด้วยตัวเลข ตัวพิมพ์เล็ก และตัวพิมพ์ใหญ่");
+        }
+    
+        try {
+            // ส่งคำขอไปยัง API
+            const response = await fetch("/api/register", {
+                method: "POST", 
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    username, 
+                    password, 
+                    confirm_password, 
+                    recaptchaResponse // ส่งค่า reCAPTCHA ไปด้วย
+                })
+            });
+    
+            const data = await response.json();
+    
+            if (!response.ok) {
+                return alert(data.msg);
+            }
+    
+            alertify.success('ลงทะเบียนสำเร็จแล้ว!', 1, () => {
+                window.location = "login";
+            });
+        } catch (error) {
+            alert("เกิดข้อผิดพลาดในการส่งข้อมูล");
+        }
+    });
+</script>
+
+{% endblock %}
